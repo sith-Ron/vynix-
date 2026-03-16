@@ -11,11 +11,13 @@ class PomodoroRepository {
     required int completedFocusSessions,
     required int totalFocusSeconds,
     required int cycles,
+    required int focusMinutes,
   }) {
     return _db.savePomodoroStats(
       completedFocusSessions: completedFocusSessions,
       totalFocusSeconds: totalFocusSeconds,
       cycles: cycles,
+      focusMinutes: focusMinutes,
     );
   }
 }

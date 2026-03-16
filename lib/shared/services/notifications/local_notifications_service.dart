@@ -18,11 +18,35 @@ class LocalNotificationsService {
   static const String _alarmsChannelName = 'Alarms';
   static const String _alarmsChannelDescription =
       'Scheduled alarm notifications';
+  static const String _focusChannelId = 'focus_sessions';
+  static const String _focusChannelName = 'Focus Sessions';
+  static const String _focusChannelDescription =
+      'Notifications for completed focus sessions';
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+
+  Future<AndroidScheduleMode> _bestEffortScheduleMode() async {
+    final androidImplementation = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidImplementation == null) {
+      return AndroidScheduleMode.exactAllowWhileIdle;
+    }
+
+    try {
+      final canExact =
+          await androidImplementation.canScheduleExactNotifications() ?? false;
+      return canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle;
+    } catch (_) {
+      return AndroidScheduleMode.inexactAllowWhileIdle;
+    }
+  }
 
   Future<void> initialize() async {
     if (_initialized) {
@@ -109,7 +133,7 @@ class LocalNotificationsService {
         iOS: DarwinNotificationDetails(),
         macOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _bestEffortScheduleMode(),
       payload: 'calendar_event:${event.id}',
     );
   }
@@ -158,7 +182,7 @@ class LocalNotificationsService {
             presentSound: sound,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: await _bestEffortScheduleMode(),
         matchDateTimeComponents: DateTimeComponents.time,
         payload: 'alarm:$alarmId',
       );
@@ -195,7 +219,7 @@ class LocalNotificationsService {
             presentSound: sound,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: await _bestEffortScheduleMode(),
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         payload: 'alarm:$alarmId:$weekday',
       );
@@ -237,9 +261,80 @@ class LocalNotificationsService {
         iOS: DarwinNotificationDetails(),
         macOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _bestEffortScheduleMode(),
       payload: 'alarm_snooze:$alarmId',
     );
+  }
+
+  Future<void> notifyFocusSessionCompleted({
+    required bool repeated,
+    required int completedSessions,
+  }) async {
+    await initialize();
+    await _plugin.show(
+      300001,
+      'Focus session complete',
+      repeated
+          ? 'Great work. Break started. Sessions done: $completedSessions.'
+          : 'Great work. Your one-time focus session is complete.',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _focusChannelId,
+          _focusChannelName,
+          channelDescription: _focusChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+          enableVibration: true,
+        ),
+        iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
+      ),
+      payload: 'focus_session_complete',
+    );
+  }
+
+  Future<void> scheduleFocusSessionCompletion({
+    required Duration after,
+    required bool repeated,
+    required int completedSessions,
+  }) async {
+    await initialize();
+    await cancelFocusSessionCompletion();
+
+    if (after <= Duration.zero) {
+      return;
+    }
+
+    final triggerAt = tz.TZDateTime.now(tz.local).add(after);
+    await _plugin.zonedSchedule(
+      300001,
+      'Focus session complete',
+      repeated
+          ? 'Great work. Break starts next. Sessions done: $completedSessions.'
+          : 'Great work. Your one-time focus session is complete.',
+      triggerAt,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _focusChannelId,
+          _focusChannelName,
+          channelDescription: _focusChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+          enableVibration: true,
+        ),
+        iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: await _bestEffortScheduleMode(),
+      payload: 'focus_session_complete',
+    );
+  }
+
+  Future<void> cancelFocusSessionCompletion() async {
+    await initialize();
+    await _plugin.cancel(300001);
   }
 
   Future<void> _configureLocalTimezone() async {

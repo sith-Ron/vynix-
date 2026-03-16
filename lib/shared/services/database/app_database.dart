@@ -89,6 +89,7 @@ class PomodoroStats extends Table {
       integer().withDefault(const Constant(0))();
   IntColumn get totalFocusSeconds => integer().withDefault(const Constant(0))();
   IntColumn get cycles => integer().withDefault(const Constant(0))();
+  IntColumn get focusMinutes => integer().withDefault(const Constant(25))();
 
   @override
   Set<Column<Object>>? get primaryKey => {id};
@@ -156,7 +157,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -173,6 +174,15 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(calculatorPrefs);
         await migrator.createTable(calculatorHistory);
       }
+      if (from < 4) {
+        final hasFocusMinutes = await _columnExists(
+          tableName: 'pomodoro_stats',
+          columnName: 'focus_minutes',
+        );
+        if (!hasFocusMinutes) {
+          await migrator.addColumn(pomodoroStats, pomodoroStats.focusMinutes);
+        }
+      }
     },
     beforeOpen: (details) async {
       if (details.wasCreated) {
@@ -182,6 +192,7 @@ class AppDatabase extends _$AppDatabase {
             completedFocusSessions: Value(0),
             totalFocusSeconds: Value(0),
             cycles: Value(0),
+            focusMinutes: Value(25),
           ),
         );
         await into(calculatorPrefs).insert(
@@ -195,6 +206,23 @@ class AppDatabase extends _$AppDatabase {
       }
     },
   );
+
+  Future<bool> _columnExists({
+    required String tableName,
+    required String columnName,
+  }) async {
+    final rows = await customSelect('PRAGMA table_info("$tableName")').get();
+    for (final row in rows) {
+      final name = row.data['name']?.toString();
+      if (name == null) {
+        continue;
+      }
+      if (name.toLowerCase() == columnName.toLowerCase()) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   Stream<List<NoteRecord>> watchNotes({
     required String searchQuery,
@@ -370,6 +398,7 @@ class AppDatabase extends _$AppDatabase {
             completedFocusSessions: 0,
             totalFocusSeconds: 0,
             cycles: 0,
+            focusMinutes: 25,
           );
     });
   }
@@ -378,6 +407,7 @@ class AppDatabase extends _$AppDatabase {
     required int completedFocusSessions,
     required int totalFocusSeconds,
     required int cycles,
+    required int focusMinutes,
   }) {
     return into(pomodoroStats).insertOnConflictUpdate(
       PomodoroStatsCompanion(
@@ -385,6 +415,7 @@ class AppDatabase extends _$AppDatabase {
         completedFocusSessions: Value(completedFocusSessions),
         totalFocusSeconds: Value(totalFocusSeconds),
         cycles: Value(cycles),
+        focusMinutes: Value(focusMinutes),
       ),
     );
   }

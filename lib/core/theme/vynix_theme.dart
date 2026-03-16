@@ -1,27 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:vynix/core/theme/vynix_colors.dart';
 
 abstract final class VynixTheme {
   static ThemeData light() {
-    const scheme = ColorScheme(
-      brightness: Brightness.light,
-      primary: VynixColors.cyan,
-      onPrimary: Colors.black,
-      secondary: VynixColors.emerald,
-      onSecondary: Colors.black,
-      error: VynixColors.coral,
-      onError: Colors.white,
-      surface: VynixColors.lightSurface,
-      onSurface: Color(0xFF17202A),
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: VynixColors.lightAccent,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: VynixColors.lightAccent,
+          onPrimary: Colors.black,
+          secondary: VynixColors.lightAccentSecondary,
+          onSecondary: Colors.white,
+          error: VynixColors.coral,
+          onError: Colors.white,
+          surface: VynixColors.lightSurface,
+          onSurface: VynixColors.lightPrimaryText,
+          outline: VynixColors.lightShadow,
+          surfaceContainerHighest: VynixColors.lightSurface,
+        );
 
     return _baseTheme(scheme).copyWith(
       scaffoldBackgroundColor: VynixColors.lightBackground,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-      ),
+      dividerColor: VynixColors.lightShadow,
       cardTheme: const CardThemeData(
         color: VynixColors.lightSurface,
         elevation: 0,
@@ -30,25 +32,26 @@ abstract final class VynixTheme {
   }
 
   static ThemeData dark() {
-    const scheme = ColorScheme(
-      brightness: Brightness.dark,
-      primary: VynixColors.cyan,
-      onPrimary: Colors.black,
-      secondary: VynixColors.emerald,
-      onSecondary: Colors.black,
-      error: VynixColors.coral,
-      onError: Colors.black,
-      surface: VynixColors.darkSurface,
-      onSurface: Color(0xFFE6EDF3),
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: VynixColors.darkAccent,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: VynixColors.darkAccent,
+          onPrimary: Colors.black,
+          secondary: VynixColors.darkAccentSecondary,
+          onSecondary: Colors.black,
+          error: VynixColors.coral,
+          onError: Colors.black,
+          surface: VynixColors.darkSurface,
+          onSurface: VynixColors.darkPrimaryText,
+          outline: VynixColors.darkSecondaryText.withValues(alpha: 0.28),
+          surfaceContainerHighest: VynixColors.darkSurface,
+        );
 
     return _baseTheme(scheme).copyWith(
       scaffoldBackgroundColor: VynixColors.darkBackground,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-      ),
+      dividerColor: VynixColors.darkSecondaryText.withValues(alpha: 0.32),
       cardTheme: const CardThemeData(
         color: VynixColors.darkSurface,
         elevation: 0,
@@ -57,9 +60,18 @@ abstract final class VynixTheme {
   }
 
   static ThemeData _baseTheme(ColorScheme colorScheme) {
+    final baseTextTheme = GoogleFonts.manropeTextTheme();
+    final themedText = baseTextTheme.apply(
+      bodyColor: colorScheme.onSurface,
+      displayColor: colorScheme.onSurface,
+    );
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      fontFamily: GoogleFonts.manrope().fontFamily,
+      textTheme: themedText,
+      primaryTextTheme: themedText,
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
@@ -72,12 +84,24 @@ abstract final class VynixTheme {
       ),
       visualDensity: VisualDensity.adaptivePlatformDensity,
       appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        foregroundColor: colorScheme.onSurface,
         titleTextStyle: TextStyle(
           color: colorScheme.onSurface,
           fontSize: 24,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.3,
         ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
@@ -99,6 +123,19 @@ abstract final class VynixTheme {
         activeTrackColor: colorScheme.primary,
         thumbColor: colorScheme.primary,
         inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.2),
+      ),
+      chipTheme: ChipThemeData(
+        selectedColor: colorScheme.primary.withValues(alpha: 0.18),
+        backgroundColor: colorScheme.surface,
+        side: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.14)),
+        labelStyle: themedText.labelMedium,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        hintStyle: themedText.bodyMedium?.copyWith(
+          color: colorScheme.brightness == Brightness.dark
+              ? VynixColors.darkSecondaryText
+              : VynixColors.lightSecondaryText,
+        ),
       ),
     );
   }

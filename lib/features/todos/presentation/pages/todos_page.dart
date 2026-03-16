@@ -15,9 +15,11 @@ class TodosPage extends ConsumerWidget {
 
     return AdaptiveSectionScaffold(
       title: 'Tasks',
-      trailing: IconButton(
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'todos_fab',
+        tooltip: 'Add task',
         onPressed: () => _showAddTodoDialog(context, ref),
-        icon: const Icon(CupertinoIcons.add),
+        child: const Icon(CupertinoIcons.add),
       ),
       body: CustomScrollView(
         slivers: [

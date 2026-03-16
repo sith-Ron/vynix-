@@ -10,11 +10,13 @@ class AdaptiveSectionScaffold extends StatelessWidget {
     required this.title,
     required this.body,
     this.trailing,
+    this.floatingActionButton,
   });
 
   final String title;
   final Widget body;
   final Widget? trailing;
+  final Widget? floatingActionButton;
 
   bool get _isCupertino {
     if (kIsWeb) {
@@ -26,15 +28,28 @@ class AdaptiveSectionScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (_isCupertino) {
+      final pageBody = SafeArea(
+        bottom: false,
+        child: Material(type: MaterialType.transparency, child: body),
+      );
+
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
           middle: Text(title),
           trailing: trailing,
         ),
-        child: SafeArea(
-          bottom: false,
-          child: Material(type: MaterialType.transparency, child: body),
-        ),
+        child: floatingActionButton == null
+            ? pageBody
+            : Stack(
+                children: [
+                  pageBody,
+                  PositionedDirectional(
+                    end: 16,
+                    bottom: 16,
+                    child: SafeArea(top: false, child: floatingActionButton!),
+                  ),
+                ],
+              ),
       );
     }
 
@@ -44,6 +59,7 @@ class AdaptiveSectionScaffold extends StatelessWidget {
         actions: trailing == null ? null : [trailing!],
       ),
       body: body,
+      floatingActionButton: floatingActionButton,
     );
   }
 }

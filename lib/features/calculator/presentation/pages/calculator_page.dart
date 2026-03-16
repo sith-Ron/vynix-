@@ -48,7 +48,7 @@ class CalculatorPage extends ConsumerWidget {
                     _calcButton('4', () => notifier.append('4')),
                     _calcButton('5', () => notifier.append('5')),
                     _calcButton('6', () => notifier.append('6')),
-                    _calcButton('*', () => notifier.append('*')),
+                    _calcButton('x', () => notifier.append('*')),
                     _calcButton('1', () => notifier.append('1')),
                     _calcButton('2', () => notifier.append('2')),
                     _calcButton('3', () => notifier.append('3')),
@@ -196,12 +196,12 @@ class _QuickUnitConverterCardState
           DropdownButtonFormField<String>(
             initialValue: _type,
             items: const [
-              DropdownMenuItem(value: 'km_to_mi', child: Text('Km -> Miles')),
-              DropdownMenuItem(value: 'mi_to_km', child: Text('Miles -> Km')),
-              DropdownMenuItem(value: 'kg_to_lb', child: Text('Kg -> Lb')),
-              DropdownMenuItem(value: 'lb_to_kg', child: Text('Lb -> Kg')),
-              DropdownMenuItem(value: 'c_to_f', child: Text('C -> F')),
-              DropdownMenuItem(value: 'f_to_c', child: Text('F -> C')),
+              DropdownMenuItem(value: 'km_to_mi', child: Text('KM to Miles')),
+              DropdownMenuItem(value: 'mi_to_km', child: Text('Miles to KM')),
+              DropdownMenuItem(value: 'kg_to_lb', child: Text('KG to LB')),
+              DropdownMenuItem(value: 'lb_to_kg', child: Text('LB to KG')),
+              DropdownMenuItem(value: 'c_to_f', child: Text('C to F')),
+              DropdownMenuItem(value: 'f_to_c', child: Text('F to C')),
             ],
             onChanged: (value) {
               if (value != null) {

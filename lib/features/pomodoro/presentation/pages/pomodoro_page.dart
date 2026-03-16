@@ -8,6 +8,45 @@ import 'package:vynix/shared/widgets/aether_glass_card.dart';
 class PomodoroPage extends ConsumerWidget {
   const PomodoroPage({super.key});
 
+  Future<void> _startWithModeSelection(
+    BuildContext context,
+    PomodoroController notifier,
+  ) async {
+    final mode = await showModalBottomSheet<FocusSessionMode>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(CupertinoIcons.timer),
+                title: const Text('One-time session'),
+                subtitle: const Text('Run one focus block, then stop.'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(FocusSessionMode.oneTime),
+              ),
+              ListTile(
+                leading: const Icon(CupertinoIcons.repeat),
+                title: const Text('Repeated sessions'),
+                subtitle: const Text(
+                  'Continue with breaks and next focus blocks.',
+                ),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(FocusSessionMode.repeated),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (mode != null) {
+      notifier.start(mode: mode);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(pomodoroControllerProvider);
@@ -26,6 +65,10 @@ class PomodoroPage extends ConsumerWidget {
       PomodoroPhase.focus => 'Focus',
       PomodoroPhase.shortBreak => 'Short Break',
       PomodoroPhase.longBreak => 'Long Break',
+    };
+    final sessionModeText = switch (state.sessionMode) {
+      FocusSessionMode.oneTime => 'One-time',
+      FocusSessionMode.repeated => 'Repeated',
     };
 
     return AdaptiveSectionScaffold(
@@ -55,7 +98,10 @@ class PomodoroPage extends ConsumerWidget {
                           FilledButton.icon(
                             onPressed: state.running
                                 ? notifier.pause
-                                : notifier.start,
+                                : () => _startWithModeSelection(
+                                    context,
+                                    notifier,
+                                  ),
                             icon: Icon(
                               state.running
                                   ? CupertinoIcons.pause_fill
@@ -70,6 +116,37 @@ class PomodoroPage extends ConsumerWidget {
                             label: const Text('Reset'),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Session mode: $sessionModeText',
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Focus time: ${state.focusDurationMinutes} min',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          Text(
+                            '5-120',
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                        ],
+                      ),
+                      Slider.adaptive(
+                        min: 5,
+                        max: 120,
+                        divisions: 23,
+                        value: state.focusDurationMinutes.toDouble(),
+                        onChanged: state.running
+                            ? null
+                            : (value) => notifier.setFocusDurationMinutes(
+                                value.round(),
+                              ),
                       ),
                     ],
                   ),

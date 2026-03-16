@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vynix/core/providers/navigation_provider.dart';
 import 'package:vynix/features/calendar/presentation/pages/calendar_page.dart';
+import 'package:vynix/features/home/presentation/pages/home_dashboard_page.dart';
 import 'package:vynix/features/notes/presentation/pages/notes_page.dart';
 import 'package:vynix/features/pomodoro/presentation/pages/pomodoro_page.dart';
-import 'package:vynix/features/quick_tools/presentation/pages/quick_tools_page.dart';
 import 'package:vynix/features/todos/presentation/pages/todos_page.dart';
 import 'package:vynix/shared/models/app_section.dart';
 
@@ -23,6 +23,11 @@ class HomeShellPage extends ConsumerWidget {
   }
 
   static const List<AppSection> _sections = [
+    AppSection(
+      label: 'Home',
+      icon: CupertinoIcons.house,
+      page: HomeDashboardPage(),
+    ),
     AppSection(
       label: 'Notes',
       icon: CupertinoIcons.doc_text,
@@ -42,11 +47,6 @@ class HomeShellPage extends ConsumerWidget {
       label: 'Focus',
       icon: CupertinoIcons.timer,
       page: PomodoroPage(),
-    ),
-    AppSection(
-      label: 'Tools',
-      icon: CupertinoIcons.sparkles,
-      page: QuickToolsPage(),
     ),
   ];
 

@@ -19,10 +19,11 @@ class NotesPage extends ConsumerWidget {
 
     return AdaptiveSectionScaffold(
       title: 'Notes',
-      trailing: IconButton(
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'notes_fab',
         tooltip: 'Create note',
         onPressed: () => _openEditor(context),
-        icon: const Icon(CupertinoIcons.add),
+        child: const Icon(CupertinoIcons.add),
       ),
       body: CustomScrollView(
         slivers: [

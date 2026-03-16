@@ -1831,12 +1831,25 @@ class $PomodoroStatsTable extends PomodoroStats
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _focusMinutesMeta = const VerificationMeta(
+    'focusMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> focusMinutes = GeneratedColumn<int>(
+    'focus_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(25),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     completedFocusSessions,
     totalFocusSeconds,
     cycles,
+    focusMinutes,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1877,6 +1890,15 @@ class $PomodoroStatsTable extends PomodoroStats
         cycles.isAcceptableOrUnknown(data['cycles']!, _cyclesMeta),
       );
     }
+    if (data.containsKey('focus_minutes')) {
+      context.handle(
+        _focusMinutesMeta,
+        focusMinutes.isAcceptableOrUnknown(
+          data['focus_minutes']!,
+          _focusMinutesMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1902,6 +1924,10 @@ class $PomodoroStatsTable extends PomodoroStats
         DriftSqlType.int,
         data['${effectivePrefix}cycles'],
       )!,
+      focusMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}focus_minutes'],
+      )!,
     );
   }
 
@@ -1917,11 +1943,13 @@ class PomodoroStatsRecord extends DataClass
   final int completedFocusSessions;
   final int totalFocusSeconds;
   final int cycles;
+  final int focusMinutes;
   const PomodoroStatsRecord({
     required this.id,
     required this.completedFocusSessions,
     required this.totalFocusSeconds,
     required this.cycles,
+    required this.focusMinutes,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1930,6 +1958,7 @@ class PomodoroStatsRecord extends DataClass
     map['completed_focus_sessions'] = Variable<int>(completedFocusSessions);
     map['total_focus_seconds'] = Variable<int>(totalFocusSeconds);
     map['cycles'] = Variable<int>(cycles);
+    map['focus_minutes'] = Variable<int>(focusMinutes);
     return map;
   }
 
@@ -1939,6 +1968,7 @@ class PomodoroStatsRecord extends DataClass
       completedFocusSessions: Value(completedFocusSessions),
       totalFocusSeconds: Value(totalFocusSeconds),
       cycles: Value(cycles),
+      focusMinutes: Value(focusMinutes),
     );
   }
 
@@ -1954,6 +1984,7 @@ class PomodoroStatsRecord extends DataClass
       ),
       totalFocusSeconds: serializer.fromJson<int>(json['totalFocusSeconds']),
       cycles: serializer.fromJson<int>(json['cycles']),
+      focusMinutes: serializer.fromJson<int>(json['focusMinutes']),
     );
   }
   @override
@@ -1964,6 +1995,7 @@ class PomodoroStatsRecord extends DataClass
       'completedFocusSessions': serializer.toJson<int>(completedFocusSessions),
       'totalFocusSeconds': serializer.toJson<int>(totalFocusSeconds),
       'cycles': serializer.toJson<int>(cycles),
+      'focusMinutes': serializer.toJson<int>(focusMinutes),
     };
   }
 
@@ -1972,12 +2004,14 @@ class PomodoroStatsRecord extends DataClass
     int? completedFocusSessions,
     int? totalFocusSeconds,
     int? cycles,
+    int? focusMinutes,
   }) => PomodoroStatsRecord(
     id: id ?? this.id,
     completedFocusSessions:
         completedFocusSessions ?? this.completedFocusSessions,
     totalFocusSeconds: totalFocusSeconds ?? this.totalFocusSeconds,
     cycles: cycles ?? this.cycles,
+    focusMinutes: focusMinutes ?? this.focusMinutes,
   );
   PomodoroStatsRecord copyWithCompanion(PomodoroStatsCompanion data) {
     return PomodoroStatsRecord(
@@ -1989,6 +2023,9 @@ class PomodoroStatsRecord extends DataClass
           ? data.totalFocusSeconds.value
           : this.totalFocusSeconds,
       cycles: data.cycles.present ? data.cycles.value : this.cycles,
+      focusMinutes: data.focusMinutes.present
+          ? data.focusMinutes.value
+          : this.focusMinutes,
     );
   }
 
@@ -1998,14 +2035,20 @@ class PomodoroStatsRecord extends DataClass
           ..write('id: $id, ')
           ..write('completedFocusSessions: $completedFocusSessions, ')
           ..write('totalFocusSeconds: $totalFocusSeconds, ')
-          ..write('cycles: $cycles')
+          ..write('cycles: $cycles, ')
+          ..write('focusMinutes: $focusMinutes')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, completedFocusSessions, totalFocusSeconds, cycles);
+  int get hashCode => Object.hash(
+    id,
+    completedFocusSessions,
+    totalFocusSeconds,
+    cycles,
+    focusMinutes,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2013,7 +2056,8 @@ class PomodoroStatsRecord extends DataClass
           other.id == this.id &&
           other.completedFocusSessions == this.completedFocusSessions &&
           other.totalFocusSeconds == this.totalFocusSeconds &&
-          other.cycles == this.cycles);
+          other.cycles == this.cycles &&
+          other.focusMinutes == this.focusMinutes);
 }
 
 class PomodoroStatsCompanion extends UpdateCompanion<PomodoroStatsRecord> {
@@ -2021,23 +2065,27 @@ class PomodoroStatsCompanion extends UpdateCompanion<PomodoroStatsRecord> {
   final Value<int> completedFocusSessions;
   final Value<int> totalFocusSeconds;
   final Value<int> cycles;
+  final Value<int> focusMinutes;
   const PomodoroStatsCompanion({
     this.id = const Value.absent(),
     this.completedFocusSessions = const Value.absent(),
     this.totalFocusSeconds = const Value.absent(),
     this.cycles = const Value.absent(),
+    this.focusMinutes = const Value.absent(),
   });
   PomodoroStatsCompanion.insert({
     this.id = const Value.absent(),
     this.completedFocusSessions = const Value.absent(),
     this.totalFocusSeconds = const Value.absent(),
     this.cycles = const Value.absent(),
+    this.focusMinutes = const Value.absent(),
   });
   static Insertable<PomodoroStatsRecord> custom({
     Expression<int>? id,
     Expression<int>? completedFocusSessions,
     Expression<int>? totalFocusSeconds,
     Expression<int>? cycles,
+    Expression<int>? focusMinutes,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2045,6 +2093,7 @@ class PomodoroStatsCompanion extends UpdateCompanion<PomodoroStatsRecord> {
         'completed_focus_sessions': completedFocusSessions,
       if (totalFocusSeconds != null) 'total_focus_seconds': totalFocusSeconds,
       if (cycles != null) 'cycles': cycles,
+      if (focusMinutes != null) 'focus_minutes': focusMinutes,
     });
   }
 
@@ -2053,6 +2102,7 @@ class PomodoroStatsCompanion extends UpdateCompanion<PomodoroStatsRecord> {
     Value<int>? completedFocusSessions,
     Value<int>? totalFocusSeconds,
     Value<int>? cycles,
+    Value<int>? focusMinutes,
   }) {
     return PomodoroStatsCompanion(
       id: id ?? this.id,
@@ -2060,6 +2110,7 @@ class PomodoroStatsCompanion extends UpdateCompanion<PomodoroStatsRecord> {
           completedFocusSessions ?? this.completedFocusSessions,
       totalFocusSeconds: totalFocusSeconds ?? this.totalFocusSeconds,
       cycles: cycles ?? this.cycles,
+      focusMinutes: focusMinutes ?? this.focusMinutes,
     );
   }
 
@@ -2080,6 +2131,9 @@ class PomodoroStatsCompanion extends UpdateCompanion<PomodoroStatsRecord> {
     if (cycles.present) {
       map['cycles'] = Variable<int>(cycles.value);
     }
+    if (focusMinutes.present) {
+      map['focus_minutes'] = Variable<int>(focusMinutes.value);
+    }
     return map;
   }
 
@@ -2089,7 +2143,8 @@ class PomodoroStatsCompanion extends UpdateCompanion<PomodoroStatsRecord> {
           ..write('id: $id, ')
           ..write('completedFocusSessions: $completedFocusSessions, ')
           ..write('totalFocusSeconds: $totalFocusSeconds, ')
-          ..write('cycles: $cycles')
+          ..write('cycles: $cycles, ')
+          ..write('focusMinutes: $focusMinutes')
           ..write(')'))
         .toString();
   }
@@ -4414,6 +4469,7 @@ typedef $$PomodoroStatsTableCreateCompanionBuilder =
       Value<int> completedFocusSessions,
       Value<int> totalFocusSeconds,
       Value<int> cycles,
+      Value<int> focusMinutes,
     });
 typedef $$PomodoroStatsTableUpdateCompanionBuilder =
     PomodoroStatsCompanion Function({
@@ -4421,6 +4477,7 @@ typedef $$PomodoroStatsTableUpdateCompanionBuilder =
       Value<int> completedFocusSessions,
       Value<int> totalFocusSeconds,
       Value<int> cycles,
+      Value<int> focusMinutes,
     });
 
 class $$PomodoroStatsTableFilterComposer
@@ -4449,6 +4506,11 @@ class $$PomodoroStatsTableFilterComposer
 
   ColumnFilters<int> get cycles => $composableBuilder(
     column: $table.cycles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4481,6 +4543,11 @@ class $$PomodoroStatsTableOrderingComposer
     column: $table.cycles,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PomodoroStatsTableAnnotationComposer
@@ -4507,6 +4574,11 @@ class $$PomodoroStatsTableAnnotationComposer
 
   GeneratedColumn<int> get cycles =>
       $composableBuilder(column: $table.cycles, builder: (column) => column);
+
+  GeneratedColumn<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
+    builder: (column) => column,
+  );
 }
 
 class $$PomodoroStatsTableTableManager
@@ -4548,11 +4620,13 @@ class $$PomodoroStatsTableTableManager
                 Value<int> completedFocusSessions = const Value.absent(),
                 Value<int> totalFocusSeconds = const Value.absent(),
                 Value<int> cycles = const Value.absent(),
+                Value<int> focusMinutes = const Value.absent(),
               }) => PomodoroStatsCompanion(
                 id: id,
                 completedFocusSessions: completedFocusSessions,
                 totalFocusSeconds: totalFocusSeconds,
                 cycles: cycles,
+                focusMinutes: focusMinutes,
               ),
           createCompanionCallback:
               ({
@@ -4560,11 +4634,13 @@ class $$PomodoroStatsTableTableManager
                 Value<int> completedFocusSessions = const Value.absent(),
                 Value<int> totalFocusSeconds = const Value.absent(),
                 Value<int> cycles = const Value.absent(),
+                Value<int> focusMinutes = const Value.absent(),
               }) => PomodoroStatsCompanion.insert(
                 id: id,
                 completedFocusSessions: completedFocusSessions,
                 totalFocusSeconds: totalFocusSeconds,
                 cycles: cycles,
+                focusMinutes: focusMinutes,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

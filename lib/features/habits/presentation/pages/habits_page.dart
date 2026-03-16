@@ -15,9 +15,11 @@ class HabitsPage extends ConsumerWidget {
 
     return AdaptiveSectionScaffold(
       title: 'Habits',
-      trailing: IconButton(
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'habits_fab',
+        tooltip: 'Create habit',
         onPressed: () => _showAddHabitDialog(context, ref),
-        icon: const Icon(CupertinoIcons.add),
+        child: const Icon(CupertinoIcons.add),
       ),
       body: CustomScrollView(
         slivers: [

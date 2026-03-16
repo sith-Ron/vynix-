@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vynix/app.dart';
+import 'package:vynix/core/providers/navigation_provider.dart';
 import 'package:vynix/features/notes/domain/models/note_entry.dart';
 import 'package:vynix/features/notes/presentation/providers/notes_providers.dart';
 
@@ -9,6 +10,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          homeNavigationIndexProvider.overrideWithValue(1),
           filteredNotesProvider.overrideWith(
             (ref) => Stream<List<NoteEntry>>.value(const <NoteEntry>[]),
           ),

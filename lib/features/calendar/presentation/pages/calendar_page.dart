@@ -21,10 +21,11 @@ class CalendarPage extends ConsumerWidget {
 
     return AdaptiveSectionScaffold(
       title: 'Calendar',
-      trailing: IconButton(
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'calendar_fab',
         tooltip: 'Add event',
         onPressed: () => _openEventEditor(context, selectedDay: selectedDay),
-        icon: const Icon(CupertinoIcons.add),
+        child: const Icon(CupertinoIcons.add),
       ),
       body: CustomScrollView(
         slivers: [

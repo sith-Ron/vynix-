@@ -14,9 +14,11 @@ class AlarmsPage extends ConsumerWidget {
 
     return AdaptiveSectionScaffold(
       title: 'Alarms & Clock',
-      trailing: IconButton(
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'alarms_fab',
+        tooltip: 'Create alarm',
         onPressed: () => _showAddAlarmDialog(context, ref),
-        icon: const Icon(CupertinoIcons.add),
+        child: const Icon(CupertinoIcons.add),
       ),
       body: CustomScrollView(
         slivers: [
