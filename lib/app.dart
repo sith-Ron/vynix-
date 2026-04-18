@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vynix/core/providers/app_settings_provider.dart';
+import 'package:vynix/core/providers/home_widget_provider.dart';
 import 'package:vynix/core/theme/vynix_theme.dart';
 import 'package:vynix/features/home/presentation/pages/home_shell_page.dart';
 
@@ -13,6 +14,9 @@ class VynixApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsControllerProvider);
+
+    // Keep native home-screen / lock-screen widget data in sync.
+    ref.watch(homeWidgetSyncProvider);
 
     return MaterialApp(
       title: 'Vynix',

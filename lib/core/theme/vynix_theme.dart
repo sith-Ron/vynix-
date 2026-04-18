@@ -10,23 +10,27 @@ abstract final class VynixTheme {
           brightness: Brightness.light,
         ).copyWith(
           primary: VynixColors.lightAccent,
-          onPrimary: Colors.black,
+          onPrimary: Colors.white,
           secondary: VynixColors.lightAccentSecondary,
           onSecondary: Colors.white,
           error: VynixColors.coral,
           onError: Colors.white,
           surface: VynixColors.lightSurface,
           onSurface: VynixColors.lightPrimaryText,
-          outline: VynixColors.lightShadow,
-          surfaceContainerHighest: VynixColors.lightSurface,
+          outline: VynixColors.lightBorder,
+          surfaceContainerHighest: VynixColors.lightSurfaceElevated,
         );
 
     return _baseTheme(scheme).copyWith(
       scaffoldBackgroundColor: VynixColors.lightBackground,
-      dividerColor: VynixColors.lightShadow,
-      cardTheme: const CardThemeData(
+      dividerColor: VynixColors.lightBorder,
+      cardTheme: CardThemeData(
         color: VynixColors.lightSurface,
         elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: VynixColors.lightBorder),
+        ),
       ),
     );
   }
@@ -45,22 +49,26 @@ abstract final class VynixTheme {
           onError: Colors.black,
           surface: VynixColors.darkSurface,
           onSurface: VynixColors.darkPrimaryText,
-          outline: VynixColors.darkSecondaryText.withValues(alpha: 0.28),
-          surfaceContainerHighest: VynixColors.darkSurface,
+          outline: VynixColors.darkBorder,
+          surfaceContainerHighest: VynixColors.darkSurfaceElevated,
         );
 
     return _baseTheme(scheme).copyWith(
       scaffoldBackgroundColor: VynixColors.darkBackground,
-      dividerColor: VynixColors.darkSecondaryText.withValues(alpha: 0.32),
-      cardTheme: const CardThemeData(
+      dividerColor: VynixColors.darkBorder,
+      cardTheme: CardThemeData(
         color: VynixColors.darkSurface,
         elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: VynixColors.darkBorder),
+        ),
       ),
     );
   }
 
   static ThemeData _baseTheme(ColorScheme colorScheme) {
-    final baseTextTheme = GoogleFonts.manropeTextTheme();
+    final baseTextTheme = GoogleFonts.interTextTheme();
     final themedText = baseTextTheme.apply(
       bodyColor: colorScheme.onSurface,
       displayColor: colorScheme.onSurface,
@@ -69,8 +77,47 @@ abstract final class VynixTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      fontFamily: GoogleFonts.manrope().fontFamily,
-      textTheme: themedText,
+      fontFamily: GoogleFonts.inter().fontFamily,
+      textTheme: themedText.copyWith(
+        displayLarge: themedText.displayLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -1.5,
+        ),
+        displayMedium: themedText.displayMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.5,
+        ),
+        headlineLarge: themedText.headlineLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+        ),
+        headlineMedium: themedText.headlineMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        titleLarge: themedText.titleLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
+        ),
+        titleMedium: themedText.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        bodyLarge: themedText.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+        ),
+        bodyMedium: themedText.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+        ),
+        labelLarge: themedText.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.1,
+        ),
+        labelMedium: themedText.labelMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+          color: colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
+      ),
       primaryTextTheme: themedText,
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
@@ -86,29 +133,74 @@ abstract final class VynixTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         foregroundColor: colorScheme.onSurface,
         titleTextStyle: TextStyle(
           color: colorScheme.onSurface,
-          fontSize: 24,
+          fontSize: 22,
           fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
+          letterSpacing: -0.4,
+          fontFamily: GoogleFonts.inter().fontFamily,
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontFamily: GoogleFonts.inter().fontFamily,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          side: BorderSide(color: colorScheme.outline),
+          textStyle: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontFamily: GoogleFonts.inter().fontFamily,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          textStyle: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontFamily: GoogleFonts.inter().fontFamily,
+          ),
+        ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        height: 72,
-        indicatorColor: colorScheme.primary.withValues(alpha: 0.18),
+        height: 68,
+        backgroundColor: colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: colorScheme.primary.withValues(alpha: 0.12),
         labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
+          TextStyle(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+            fontSize: 11,
+            fontFamily: GoogleFonts.inter().fontFamily,
+          ),
         ),
       ),
       switchTheme: SwitchThemeData(
@@ -122,20 +214,55 @@ abstract final class VynixTheme {
       sliderTheme: SliderThemeData(
         activeTrackColor: colorScheme.primary,
         thumbColor: colorScheme.primary,
-        inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.2),
+        inactiveTrackColor: colorScheme.onSurface.withValues(alpha: 0.12),
+        overlayColor: colorScheme.primary.withValues(alpha: 0.12),
       ),
       chipTheme: ChipThemeData(
-        selectedColor: colorScheme.primary.withValues(alpha: 0.18),
+        selectedColor: colorScheme.primary.withValues(alpha: 0.14),
         backgroundColor: colorScheme.surface,
-        side: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.14)),
-        labelStyle: themedText.labelMedium,
+        side: BorderSide(color: colorScheme.outline),
+        labelStyle: themedText.labelMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: colorScheme.brightness == Brightness.dark
+            ? VynixColors.darkSurfaceElevated
+            : VynixColors.lightBackground,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         hintStyle: themedText.bodyMedium?.copyWith(
           color: colorScheme.brightness == Brightness.dark
               ? VynixColors.darkSecondaryText
               : VynixColors.lightSecondaryText,
         ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: colorScheme.outline,
+        thickness: 1,
+        space: 1,
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vynix/core/providers/app_settings_provider.dart';
 import 'package:vynix/core/providers/database_provider.dart';
 import 'package:vynix/core/providers/local_notifications_provider.dart';
 import 'package:vynix/features/calendar/data/repositories/calendar_repository.dart';
@@ -88,6 +89,7 @@ class CalendarMutations extends _$CalendarMutations {
         : endAt;
 
     try {
+      final settings = ref.read(appSettingsControllerProvider);
       final result = existing == null
           ? await repo.create(
               title: effectiveTitle,
@@ -107,7 +109,10 @@ class CalendarMutations extends _$CalendarMutations {
               reminderMinutes: reminderMinutes,
             );
 
-      await notifications.syncCalendarReminder(result);
+      await notifications.syncCalendarReminder(
+        result,
+        notificationSound: settings.notificationSound,
+      );
 
       state = const AsyncData(null);
       return result;

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vynix/core/providers/app_settings_provider.dart';
 import 'package:vynix/core/providers/database_provider.dart';
 import 'package:vynix/core/providers/local_notifications_provider.dart';
 import 'package:vynix/features/pomodoro/data/repositories/pomodoro_repository.dart';
@@ -116,6 +117,7 @@ class PomodoroController extends _$PomodoroController {
       running: true,
     );
     if (state.phase == PomodoroPhase.focus) {
+      final settings = ref.read(appSettingsControllerProvider);
       unawaited(
         ref
             .read(localNotificationsServiceProvider)
@@ -123,6 +125,7 @@ class PomodoroController extends _$PomodoroController {
               after: state.remaining,
               repeated: state.sessionMode == FocusSessionMode.repeated,
               completedSessions: state.completedFocusSessions + 1,
+              notificationSound: settings.notificationSound,
             ),
       );
     }
@@ -178,12 +181,14 @@ class PomodoroController extends _$PomodoroController {
             .read(localNotificationsServiceProvider)
             .cancelFocusSessionCompletion(),
       );
+      final settings = ref.read(appSettingsControllerProvider);
       unawaited(
         ref
             .read(localNotificationsServiceProvider)
             .notifyFocusSessionCompleted(
               repeated: state.sessionMode == FocusSessionMode.repeated,
               completedSessions: nextCompleted,
+              notificationSound: settings.notificationSound,
             ),
       );
     }
@@ -224,6 +229,7 @@ class PomodoroController extends _$PomodoroController {
     );
 
     if (nextPhase == PomodoroPhase.focus && state.running) {
+      final settings = ref.read(appSettingsControllerProvider);
       unawaited(
         ref
             .read(localNotificationsServiceProvider)
@@ -231,6 +237,7 @@ class PomodoroController extends _$PomodoroController {
               after: state.remaining,
               repeated: state.sessionMode == FocusSessionMode.repeated,
               completedSessions: state.completedFocusSessions + 1,
+              notificationSound: settings.notificationSound,
             ),
       );
     }

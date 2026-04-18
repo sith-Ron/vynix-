@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:vynix/core/providers/app_settings_provider.dart';
 import 'package:vynix/features/calendar/domain/models/calendar_event_entry.dart';
 
 class LocalNotificationsService {
@@ -22,6 +23,10 @@ class LocalNotificationsService {
   static const String _focusChannelName = 'Focus Sessions';
   static const String _focusChannelDescription =
       'Notifications for completed focus sessions';
+  static const String _todosChannelId = 'todo_reminders';
+  static const String _todosChannelName = 'Task Reminders';
+  static const String _todosChannelDescription =
+      'Reminders for upcoming task deadlines';
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -93,7 +98,10 @@ class LocalNotificationsService {
     _initialized = true;
   }
 
-  Future<void> syncCalendarReminder(CalendarEventEntry event) async {
+  Future<void> syncCalendarReminder(
+    CalendarEventEntry event, {
+    NotificationSound notificationSound = NotificationSound.defaultSound,
+  }) async {
     await initialize();
 
     final notificationId = _calendarReminderNotificationId(event.id);
@@ -120,18 +128,11 @@ class LocalNotificationsService {
       event.title,
       body,
       tz.TZDateTime.from(triggerAt, tz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _calendarChannelId,
-          _calendarChannelName,
-          channelDescription: _calendarChannelDescription,
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
-        ),
-        iOS: DarwinNotificationDetails(),
-        macOS: DarwinNotificationDetails(),
+      _notificationDetails(
+        channelId: _calendarChannelId,
+        channelName: _calendarChannelName,
+        channelDescription: _calendarChannelDescription,
+        soundEnabled: notificationSound != NotificationSound.silent,
       ),
       androidScheduleMode: await _bestEffortScheduleMode(),
       payload: 'calendar_event:${event.id}',
@@ -152,10 +153,13 @@ class LocalNotificationsService {
     required Set<int> weekdays,
     required bool vibration,
     required bool sound,
+    NotificationSound notificationSound = NotificationSound.defaultSound,
   }) async {
     await initialize();
     await cancelAlarm(alarmId);
 
+    final shouldPlaySound =
+        sound && notificationSound != NotificationSound.silent;
     if (weekdays.isEmpty) {
       final next = _nextDateForTime(hour: hour, minute: minute);
       await _plugin.zonedSchedule(
@@ -163,24 +167,13 @@ class LocalNotificationsService {
         title,
         body,
         next,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            _alarmsChannelId,
-            _alarmsChannelName,
-            channelDescription: _alarmsChannelDescription,
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: sound,
-            enableVibration: vibration,
-          ),
-          iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentSound: sound,
-          ),
-          macOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentSound: sound,
-          ),
+        _notificationDetails(
+          channelId: _alarmsChannelId,
+          channelName: _alarmsChannelName,
+          channelDescription: _alarmsChannelDescription,
+          soundEnabled: shouldPlaySound,
+          enableVibration: vibration,
+          presentAlert: true,
         ),
         androidScheduleMode: await _bestEffortScheduleMode(),
         matchDateTimeComponents: DateTimeComponents.time,
@@ -200,24 +193,13 @@ class LocalNotificationsService {
         title,
         body,
         next,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            _alarmsChannelId,
-            _alarmsChannelName,
-            channelDescription: _alarmsChannelDescription,
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: sound,
-            enableVibration: vibration,
-          ),
-          iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentSound: sound,
-          ),
-          macOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentSound: sound,
-          ),
+        _notificationDetails(
+          channelId: _alarmsChannelId,
+          channelName: _alarmsChannelName,
+          channelDescription: _alarmsChannelDescription,
+          soundEnabled: shouldPlaySound,
+          enableVibration: vibration,
+          presentAlert: true,
         ),
         androidScheduleMode: await _bestEffortScheduleMode(),
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
@@ -238,6 +220,7 @@ class LocalNotificationsService {
     required String title,
     required String body,
     required int snoozeMinutes,
+    NotificationSound notificationSound = NotificationSound.defaultSound,
   }) async {
     await initialize();
     final triggerAt = tz.TZDateTime.now(
@@ -248,18 +231,12 @@ class LocalNotificationsService {
       title,
       body,
       triggerAt,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _alarmsChannelId,
-          _alarmsChannelName,
-          channelDescription: _alarmsChannelDescription,
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
-        ),
-        iOS: DarwinNotificationDetails(),
-        macOS: DarwinNotificationDetails(),
+      _notificationDetails(
+        channelId: _alarmsChannelId,
+        channelName: _alarmsChannelName,
+        channelDescription: _alarmsChannelDescription,
+        soundEnabled: notificationSound != NotificationSound.silent,
+        enableVibration: true,
       ),
       androidScheduleMode: await _bestEffortScheduleMode(),
       payload: 'alarm_snooze:$alarmId',
@@ -269,6 +246,7 @@ class LocalNotificationsService {
   Future<void> notifyFocusSessionCompleted({
     required bool repeated,
     required int completedSessions,
+    NotificationSound notificationSound = NotificationSound.defaultSound,
   }) async {
     await initialize();
     await _plugin.show(
@@ -277,18 +255,12 @@ class LocalNotificationsService {
       repeated
           ? 'Great work. Break started. Sessions done: $completedSessions.'
           : 'Great work. Your one-time focus session is complete.',
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _focusChannelId,
-          _focusChannelName,
-          channelDescription: _focusChannelDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
-        ),
-        iOS: DarwinNotificationDetails(),
-        macOS: DarwinNotificationDetails(),
+      _notificationDetails(
+        channelId: _focusChannelId,
+        channelName: _focusChannelName,
+        channelDescription: _focusChannelDescription,
+        soundEnabled: notificationSound != NotificationSound.silent,
+        enableVibration: true,
       ),
       payload: 'focus_session_complete',
     );
@@ -298,6 +270,7 @@ class LocalNotificationsService {
     required Duration after,
     required bool repeated,
     required int completedSessions,
+    NotificationSound notificationSound = NotificationSound.defaultSound,
   }) async {
     await initialize();
     await cancelFocusSessionCompletion();
@@ -314,18 +287,12 @@ class LocalNotificationsService {
           ? 'Great work. Break starts next. Sessions done: $completedSessions.'
           : 'Great work. Your one-time focus session is complete.',
       triggerAt,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _focusChannelId,
-          _focusChannelName,
-          channelDescription: _focusChannelDescription,
-          importance: Importance.high,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
-        ),
-        iOS: DarwinNotificationDetails(),
-        macOS: DarwinNotificationDetails(),
+      _notificationDetails(
+        channelId: _focusChannelId,
+        channelName: _focusChannelName,
+        channelDescription: _focusChannelDescription,
+        soundEnabled: notificationSound != NotificationSound.silent,
+        enableVibration: true,
       ),
       androidScheduleMode: await _bestEffortScheduleMode(),
       payload: 'focus_session_complete',
@@ -335,6 +302,44 @@ class LocalNotificationsService {
   Future<void> cancelFocusSessionCompletion() async {
     await initialize();
     await _plugin.cancel(300001);
+  }
+
+  Future<void> scheduleTodoReminder({
+    required String todoId,
+    required String title,
+    required DateTime dueDate,
+    NotificationSound notificationSound = NotificationSound.defaultSound,
+  }) async {
+    await initialize();
+    final notificationId = _todoReminderNotificationId(todoId);
+    await _plugin.cancel(notificationId);
+
+    // Remind 30 minutes before noon on the due date.
+    final triggerAt = DateTime(dueDate.year, dueDate.month, dueDate.day, 9, 0);
+    if (triggerAt.isBefore(DateTime.now())) {
+      return;
+    }
+
+    await _plugin.zonedSchedule(
+      notificationId,
+      'Task due today',
+      title,
+      tz.TZDateTime.from(triggerAt, tz.local),
+      _notificationDetails(
+        channelId: _todosChannelId,
+        channelName: _todosChannelName,
+        channelDescription: _todosChannelDescription,
+        soundEnabled: notificationSound != NotificationSound.silent,
+        enableVibration: true,
+      ),
+      androidScheduleMode: await _bestEffortScheduleMode(),
+      payload: 'todo:$todoId',
+    );
+  }
+
+  Future<void> cancelTodoReminder(String todoId) async {
+    await initialize();
+    await _plugin.cancel(_todoReminderNotificationId(todoId));
   }
 
   Future<void> _configureLocalTimezone() async {
@@ -351,6 +356,9 @@ class LocalNotificationsService {
   int _alarmNotificationId(int alarmId, int variant) =>
       200000 + (alarmId * 10) + variant;
 
+  int _todoReminderNotificationId(String todoId) =>
+      400000 + (todoId.hashCode.abs() % 99999);
+
   tz.TZDateTime _nextDateForTime({required int hour, required int minute}) {
     final now = tz.TZDateTime.now(tz.local);
     var target = tz.TZDateTime(
@@ -365,6 +373,35 @@ class LocalNotificationsService {
       target = target.add(const Duration(days: 1));
     }
     return target;
+  }
+
+  NotificationDetails _notificationDetails({
+    required String channelId,
+    required String channelName,
+    required String channelDescription,
+    required bool soundEnabled,
+    bool enableVibration = true,
+    bool presentAlert = false,
+  }) {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        channelId,
+        channelName,
+        channelDescription: channelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: soundEnabled,
+        enableVibration: enableVibration,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: presentAlert,
+        presentSound: soundEnabled,
+      ),
+      macOS: DarwinNotificationDetails(
+        presentAlert: presentAlert,
+        presentSound: soundEnabled,
+      ),
+    );
   }
 
   tz.TZDateTime _nextDateForWeekday({

@@ -41,7 +41,7 @@ final class TodosControllerProvider
   }
 }
 
-String _$todosControllerHash() => r'232fad6bd8bc715be80457faa20a49382ed2cff7';
+String _$todosControllerHash() => r'e156be14aaa46fcc6073f47a5b5fec606ded6d70';
 
 abstract class _$TodosController extends $Notifier<List<TodoItem>> {
   List<TodoItem> build();

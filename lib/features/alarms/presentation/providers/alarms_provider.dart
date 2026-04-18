@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vynix/core/providers/app_settings_provider.dart';
 import 'package:vynix/core/providers/database_provider.dart';
 import 'package:vynix/core/providers/local_notifications_provider.dart';
 import 'package:vynix/features/alarms/data/repositories/alarms_repository.dart';
@@ -145,6 +146,7 @@ class AlarmsController extends _$AlarmsController {
     if (alarm == null) {
       return;
     }
+    final settings = ref.read(appSettingsControllerProvider);
     await ref
         .read(localNotificationsServiceProvider)
         .snoozeAlarm(
@@ -152,6 +154,7 @@ class AlarmsController extends _$AlarmsController {
           title: alarm.label,
           body: 'Snoozed alarm',
           snoozeMinutes: alarm.snoozeMinutes,
+          notificationSound: settings.notificationSound,
         );
   }
 
@@ -159,6 +162,7 @@ class AlarmsController extends _$AlarmsController {
     if (!alarm.enabled) {
       return;
     }
+    final settings = ref.read(appSettingsControllerProvider);
     await ref
         .read(localNotificationsServiceProvider)
         .syncAlarm(
@@ -170,6 +174,7 @@ class AlarmsController extends _$AlarmsController {
           weekdays: alarm.recurringWeekdays,
           vibration: alarm.vibration,
           sound: alarm.sound,
+          notificationSound: settings.notificationSound,
         );
   }
 

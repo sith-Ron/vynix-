@@ -92,12 +92,35 @@ class SettingsPage extends ConsumerWidget {
                 const SizedBox(height: 12),
                 VynixGlassCard(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Notifications'),
                         value: settings.notificationsEnabled,
                         onChanged: notifier.toggleNotifications,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: DropdownButtonFormField<NotificationSound>(
+                          initialValue: settings.notificationSound,
+                          decoration: const InputDecoration(
+                            labelText: 'Notification sound',
+                          ),
+                          items: NotificationSound.values
+                              .map(
+                                (sound) => DropdownMenuItem(
+                                  value: sound,
+                                  child: Text(sound.label),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              notifier.updateNotificationSound(value);
+                            }
+                          },
+                        ),
                       ),
                       SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,

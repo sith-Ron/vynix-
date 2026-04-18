@@ -4,7 +4,9 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:vynix/core/providers/app_settings_provider.dart';
 import 'package:vynix/core/providers/database_provider.dart';
+import 'package:vynix/core/providers/local_notifications_provider.dart';
 import 'package:vynix/features/todos/data/repositories/todos_repository.dart';
 import 'package:vynix/shared/services/database/app_database.dart';
 
@@ -109,12 +111,21 @@ class TodosController extends _$TodosController {
       createdAt: DateTime.now(),
     );
     unawaited(_persist(item));
+    unawaited(_syncTodoNotification(item));
   }
 
   void toggleDone(String id) {
     for (final item in state) {
       if (item.id == id) {
-        unawaited(_persist(item.copyWith(isDone: !item.isDone)));
+        final toggled = item.copyWith(isDone: !item.isDone);
+        unawaited(_persist(toggled));
+        if (toggled.isDone) {
+          unawaited(
+            ref.read(localNotificationsServiceProvider).cancelTodoReminder(id),
+          );
+        } else {
+          unawaited(_syncTodoNotification(toggled));
+        }
         break;
       }
     }
@@ -122,6 +133,9 @@ class TodosController extends _$TodosController {
 
   void removeTodo(String id) {
     unawaited(ref.read(todosRepositoryProvider).delete(id));
+    unawaited(
+      ref.read(localNotificationsServiceProvider).cancelTodoReminder(id),
+    );
   }
 
   void addSubtask({required String todoId, required String title}) {
@@ -169,6 +183,21 @@ class TodosController extends _$TodosController {
         break;
       }
     }
+  }
+
+  Future<void> _syncTodoNotification(TodoItem item) async {
+    final notif = ref.read(localNotificationsServiceProvider);
+    if (item.isDone || item.dueDate == null) {
+      await notif.cancelTodoReminder(item.id);
+      return;
+    }
+    final settings = ref.read(appSettingsControllerProvider);
+    await notif.scheduleTodoReminder(
+      todoId: item.id,
+      title: item.title,
+      dueDate: item.dueDate!,
+      notificationSound: settings.notificationSound,
+    );
   }
 
   Future<void> _persist(TodoItem item) {
