@@ -7,10 +7,7 @@ import 'package:vynix/core/theme/vynix_colors.dart';
 import 'package:vynix/features/calendar/domain/models/calendar_event_entry.dart';
 import 'package:vynix/features/calendar/presentation/providers/calendar_providers.dart';
 import 'package:vynix/features/pomodoro/presentation/providers/pomodoro_provider.dart';
-import 'package:vynix/features/quick_tools/presentation/pages/quick_tools_page.dart';
 import 'package:vynix/features/settings/presentation/pages/settings_page.dart';
-import 'package:vynix/features/todos/presentation/providers/todos_provider.dart';
-import 'package:vynix/shared/widgets/adaptive/adaptive_section_scaffold.dart';
 import 'package:vynix/shared/widgets/aether_glass_card.dart';
 
 final homeTodayAgendaProvider = StreamProvider<List<CalendarEventEntry>>((ref) {
@@ -30,15 +27,12 @@ class HomeDashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todos = ref.watch(sortedTodosProvider);
     final todayAgendaValue = ref.watch(homeTodayAgendaProvider);
     final pomodoro = ref.watch(pomodoroControllerProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    final pendingTodos = todos
-        .where((todo) => !todo.isDone)
-        .toList(growable: false);
     final todayEvents =
         todayAgendaValue.asData?.value ?? const <CalendarEventEntry>[];
 
@@ -47,66 +41,98 @@ class HomeDashboardPage extends ConsumerWidget {
     final focusClock =
         '${focusMinutes.toString().padLeft(2, '0')}:${focusSeconds.toString().padLeft(2, '0')}';
 
-    return AdaptiveSectionScaffold(
-      title: 'VYNIX',
-      trailing: IconButton(
-        onPressed: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const SettingsPage())),
-        icon: const Icon(CupertinoIcons.gear),
-      ),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
       body: CustomScrollView(
         slivers: [
-          // Greeting & date header
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_greeting(), style: theme.textTheme.headlineMedium),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat.yMMMMEEEEd().format(DateTime.now()),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.textTheme.labelMedium?.color,
-                    ),
+          // Elegant Header with Action Button
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0, top: 8.0),
+                child: IconButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SettingsPage()),
                   ),
-                ],
+                  icon: Icon(
+                    CupertinoIcons.gear_alt,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            VynixColors.darkBackground,
+                            colorScheme.primary.withValues(alpha: 0.15),
+                            VynixColors.darkBackground,
+                          ]
+                        : [
+                            VynixColors.lightBackground,
+                            colorScheme.primary.withValues(alpha: 0.08),
+                            VynixColors.lightBackground,
+                          ],
+                  ),
+                ),
+                padding: const EdgeInsets.only(left: 24, bottom: 16),
+                alignment: Alignment.bottomLeft,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _greeting(),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      DateFormat.yMMMMEEEEd().format(DateTime.now()),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.textTheme.labelMedium?.color,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
 
-          // Stat cards row
+          // Overview Stats
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
             sliver: SliverToBoxAdapter(
               child: Row(
                 children: [
                   Expanded(
                     child: _StatCard(
-                      icon: CupertinoIcons.checkmark_circle,
-                      iconColor: VynixColors.amber,
-                      label: 'Pending',
-                      value: '${pendingTodos.length}',
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
                       icon: CupertinoIcons.calendar,
                       iconColor: colorScheme.primary,
-                      label: 'Events',
+                      label: "Today's Events",
                       value: '${todayEvents.length}',
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _StatCard(
-                      icon: CupertinoIcons.timer,
+                      icon: CupertinoIcons.clock,
                       iconColor: VynixColors.success,
-                      label: 'Focus',
-                      value: focusClock,
+                      label: "Current Date",
+                      value: DateFormat.d().format(DateTime.now()),
                     ),
                   ),
                 ],
@@ -114,78 +140,9 @@ class HomeDashboardPage extends ConsumerWidget {
             ),
           ),
 
-          // Next Tasks section
+          // Focus Session
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-            sliver: SliverToBoxAdapter(
-              child: VynixGlassCard(
-                child: _SectionBlock(
-                  icon: CupertinoIcons.checkmark_seal,
-                  iconColor: VynixColors.amber,
-                  title: 'Next Tasks',
-                  emptyText: 'All clear — no pending tasks.',
-                  actionLabel: 'View All',
-                  onAction: () => ref
-                      .read(homeNavigationIndexProvider.notifier)
-                      .setIndex(3),
-                  children: pendingTodos
-                      .take(3)
-                      .map(
-                        (todo) => _TaskRow(
-                          title: todo.title,
-                          subtitle: todo.dueDate == null
-                              ? null
-                              : 'Due ${DateFormat.yMMMd().format(todo.dueDate!)}',
-                          priority: todo.priority,
-                        ),
-                      )
-                      .toList(growable: false),
-                ),
-              ),
-            ),
-          ),
-
-          // Today's Calendar section
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-            sliver: SliverToBoxAdapter(
-              child: VynixGlassCard(
-                child: todayAgendaValue.when(
-                  data: (events) => _SectionBlock(
-                    icon: CupertinoIcons.calendar,
-                    iconColor: colorScheme.primary,
-                    title: "Today's Schedule",
-                    emptyText: 'No events scheduled for today.',
-                    actionLabel: 'View All',
-                    onAction: () => ref
-                        .read(homeNavigationIndexProvider.notifier)
-                        .setIndex(2),
-                    children: events
-                        .take(3)
-                        .map(
-                          (event) => _EventRow(
-                            title: event.title,
-                            time: event.isAllDay
-                                ? 'All day'
-                                : '${DateFormat.jm().format(event.startAt)} — ${DateFormat.jm().format(event.endAt)}',
-                          ),
-                        )
-                        .toList(growable: false),
-                  ),
-                  loading: () => const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator.adaptive()),
-                  ),
-                  error: (error, _) =>
-                      Text('Failed to load today events: $error'),
-                ),
-              ),
-            ),
-          ),
-
-          // Focus Session — full interactive controls
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
             sliver: SliverToBoxAdapter(
               child: _FocusSessionCard(
                 pomodoro: pomodoro,
@@ -194,18 +151,44 @@ class HomeDashboardPage extends ConsumerWidget {
             ),
           ),
 
-          // Quick Tools button
+          // Today's Calendar Card
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+            padding: const EdgeInsets.fromLTRB(
+              24,
+              0,
+              24,
+              120,
+            ), // Bottom padding for content
             sliver: SliverToBoxAdapter(
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const QuickToolsPage()),
+              child: VynixGlassCard(
+                child: todayAgendaValue.when(
+                  data: (events) => _SectionBlock(
+                    icon: CupertinoIcons.calendar_circle_fill,
+                    iconColor: colorScheme.primary,
+                    title: "Schedule",
+                    emptyText: 'You have a clear day today.',
+                    actionLabel: 'Open',
+                    onAction: () => ref
+                        .read(homeNavigationIndexProvider.notifier)
+                        .setIndex(2), // Calendar tab index
+                    children: events
+                        .take(5)
+                        .map(
+                          (event) => _EventRow(
+                            title: event.title,
+                            time: event.isAllDay
+                                ? 'All day'
+                                : '${DateFormat.jm().format(event.startAt)} — ${DateFormat.jm().format(event.endAt)}',
+                            color: colorScheme.primary,
+                          ),
+                        )
+                        .toList(growable: false),
                   ),
-                  icon: const Icon(CupertinoIcons.square_grid_2x2, size: 18),
-                  label: const Text('Quick Tools'),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: CircularProgressIndicator.adaptive()),
+                  ),
+                  error: (error, _) => Text('Failed to load schedule: $error'),
                 ),
               ),
             ),
@@ -217,7 +200,7 @@ class HomeDashboardPage extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Stat card with icon badge
+// Stat card with gradient background and icon
 // ---------------------------------------------------------------------------
 class _StatCard extends StatelessWidget {
   const _StatCard({
@@ -236,96 +219,63 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final borderColor = isDark
-        ? VynixColors.darkBorder
-        : VynixColors.lightBorder;
-    final surfaceColor = isDark
-        ? VynixColors.darkSurfaceElevated
-        : VynixColors.lightSurfaceElevated;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  VynixColors.darkSurfaceElevated,
+                  VynixColors.darkSurfaceElevated.withValues(alpha: 0.5),
+                ]
+              : [VynixColors.lightSurfaceElevated, VynixColors.lightBackground],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: (isDark ? VynixColors.darkBorder : VynixColors.lightBorder)
+              .withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? Colors.black : VynixColors.lightShadow).withValues(
+              alpha: 0.05,
+            ),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 16, color: iconColor),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 22, color: iconColor),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Text(
             value,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
+            style: theme.textTheme.headlineLarge?.copyWith(
+              fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 2),
-          Text(label, style: theme.textTheme.labelMedium),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Task row
-// ---------------------------------------------------------------------------
-class _TaskRow extends StatelessWidget {
-  const _TaskRow({required this.title, this.subtitle, required this.priority});
-
-  final String title;
-  final String? subtitle;
-  final TodoPriority priority;
-
-  Color _priorityColor() {
-    return switch (priority) {
-      TodoPriority.high => VynixColors.coral,
-      TodoPriority.medium => VynixColors.amber,
-      TodoPriority.low => VynixColors.success,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _priorityColor(),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (subtitle != null)
-                  Text(subtitle!, style: theme.textTheme.labelMedium),
-              ],
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -338,41 +288,52 @@ class _TaskRow extends StatelessWidget {
 // Event row
 // ---------------------------------------------------------------------------
 class _EventRow extends StatelessWidget {
-  const _EventRow({required this.title, required this.time});
+  const _EventRow({
+    required this.title,
+    required this.time,
+    required this.color,
+  });
 
   final String title;
   final String time;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           Container(
-            width: 4,
-            height: 36,
+            width: 5,
+            height: 40,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(2),
+              color: color,
+              borderRadius: BorderRadius.circular(2.5),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(time, style: theme.textTheme.labelMedium),
+                const SizedBox(height: 2),
+                Text(
+                  time,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
@@ -383,7 +344,88 @@ class _EventRow extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Focus session card — full interactive controls embedded in dashboard
+// Section block
+// ---------------------------------------------------------------------------
+class _SectionBlock extends StatelessWidget {
+  const _SectionBlock({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.emptyText,
+    required this.actionLabel,
+    required this.onAction,
+    required this.children,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String emptyText;
+  final String actionLabel;
+  final VoidCallback onAction;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasContent = children.isNotEmpty;
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 24, color: iconColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              FilledButton.tonal(
+                onPressed: onAction,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 0,
+                  ),
+                  minimumSize: const Size(0, 36),
+                ),
+                child: Text(
+                  actionLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (hasContent)
+            ...children
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  emptyText,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.textTheme.labelMedium?.color,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Focus session card
 // ---------------------------------------------------------------------------
 class _FocusSessionCard extends ConsumerWidget {
   const _FocusSessionCard({required this.pomodoro, required this.focusClock});
@@ -442,7 +484,6 @@ class _FocusSessionCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(pomodoroControllerProvider.notifier);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final phaseColor = pomodoro.running
         ? VynixColors.success
@@ -455,11 +496,7 @@ class _FocusSessionCard extends ConsumerWidget {
           // Header
           Row(
             children: [
-              Icon(
-                CupertinoIcons.bolt_fill,
-                size: 18,
-                color: VynixColors.success,
-              ),
+              Icon(CupertinoIcons.bolt_fill, size: 18, color: phaseColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -536,92 +573,8 @@ class _FocusSessionCard extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          // Duration slider
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Focus: ${pomodoro.focusDurationMinutes} min',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
-              Text(
-                '${pomodoro.completedFocusSessions} sessions · ${(pomodoro.totalFocusSeconds / 60).toStringAsFixed(0)} min total',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: isDark
-                      ? VynixColors.darkSecondaryText
-                      : VynixColors.lightSecondaryText,
-                ),
-              ),
-            ],
-          ),
-          Slider.adaptive(
-            min: 5,
-            max: 120,
-            divisions: 23,
-            value: pomodoro.focusDurationMinutes.toDouble(),
-            onChanged: pomodoro.running
-                ? null
-                : (value) => notifier.setFocusDurationMinutes(value.round()),
-          ),
         ],
       ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Section block
-// ---------------------------------------------------------------------------
-class _SectionBlock extends StatelessWidget {
-  const _SectionBlock({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.emptyText,
-    required this.actionLabel,
-    required this.onAction,
-    required this.children,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String emptyText;
-  final String actionLabel;
-  final VoidCallback onAction;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasContent = children.isNotEmpty;
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 18, color: iconColor),
-            const SizedBox(width: 8),
-            Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
-            TextButton(onPressed: onAction, child: Text(actionLabel)),
-          ],
-        ),
-        if (hasContent)
-          ...children
-        else
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 8),
-            child: Text(
-              emptyText,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.textTheme.labelMedium?.color,
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

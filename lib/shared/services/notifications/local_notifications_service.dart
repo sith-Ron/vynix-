@@ -133,6 +133,7 @@ class LocalNotificationsService {
         channelName: _calendarChannelName,
         channelDescription: _calendarChannelDescription,
         soundEnabled: notificationSound != NotificationSound.silent,
+        presentAlert: true,
       ),
       androidScheduleMode: await _bestEffortScheduleMode(),
       payload: 'calendar_event:${event.id}',
@@ -174,9 +175,10 @@ class LocalNotificationsService {
           soundEnabled: shouldPlaySound,
           enableVibration: vibration,
           presentAlert: true,
+          isAlarm: true,
         ),
         androidScheduleMode: await _bestEffortScheduleMode(),
-        matchDateTimeComponents: DateTimeComponents.time,
+        // No matchDateTimeComponents → fires exactly once.
         payload: 'alarm:$alarmId',
       );
       return;
@@ -200,6 +202,7 @@ class LocalNotificationsService {
           soundEnabled: shouldPlaySound,
           enableVibration: vibration,
           presentAlert: true,
+          isAlarm: true,
         ),
         androidScheduleMode: await _bestEffortScheduleMode(),
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
@@ -237,6 +240,8 @@ class LocalNotificationsService {
         channelDescription: _alarmsChannelDescription,
         soundEnabled: notificationSound != NotificationSound.silent,
         enableVibration: true,
+        presentAlert: true,
+        isAlarm: true,
       ),
       androidScheduleMode: await _bestEffortScheduleMode(),
       payload: 'alarm_snooze:$alarmId',
@@ -382,23 +387,36 @@ class LocalNotificationsService {
     required bool soundEnabled,
     bool enableVibration = true,
     bool presentAlert = false,
+    bool isAlarm = false,
   }) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
         channelName,
         channelDescription: channelDescription,
-        importance: Importance.high,
-        priority: Priority.high,
+        importance: Importance.max,
+        priority: Priority.max,
         playSound: soundEnabled,
         enableVibration: enableVibration,
+        fullScreenIntent: isAlarm,
+        category: isAlarm ? AndroidNotificationCategory.alarm : null,
+        // Custom alarm icon shown in the status bar and notification shade.
+        // Falls back to the app icon for non-alarm notifications.
+        icon: isAlarm ? 'ic_stat_alarm' : null,
       ),
       iOS: DarwinNotificationDetails(
-        presentAlert: presentAlert,
+        presentAlert: presentAlert || isAlarm,   // legacy iOS 13 compat
+        presentBanner: presentAlert || isAlarm,  // iOS 14+
+        presentList: true,                       // show in notification centre
         presentSound: soundEnabled,
+        interruptionLevel: isAlarm
+            ? InterruptionLevel.timeSensitive
+            : InterruptionLevel.active,
       ),
       macOS: DarwinNotificationDetails(
-        presentAlert: presentAlert,
+        presentAlert: presentAlert || isAlarm,
+        presentBanner: presentAlert || isAlarm,
+        presentList: true,
         presentSound: soundEnabled,
       ),
     );

@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -6,11 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vynix/core/providers/navigation_provider.dart';
 import 'package:vynix/core/theme/vynix_colors.dart';
+import 'package:vynix/features/alarms/presentation/pages/alarms_page.dart';
 import 'package:vynix/features/calculator/presentation/pages/calculator_page.dart';
 import 'package:vynix/features/calendar/presentation/pages/calendar_page.dart';
 import 'package:vynix/features/home/presentation/pages/home_dashboard_page.dart';
-import 'package:vynix/features/notes/presentation/pages/notes_page.dart';
-import 'package:vynix/features/todos/presentation/pages/todos_page.dart';
 import 'package:vynix/shared/models/app_section.dart';
 
 class HomeShellPage extends ConsumerWidget {
@@ -31,22 +31,16 @@ class HomeShellPage extends ConsumerWidget {
       page: HomeDashboardPage(),
     ),
     AppSection(
-      label: 'Notes',
-      icon: CupertinoIcons.doc_text,
-      activeIcon: CupertinoIcons.doc_text_fill,
-      page: NotesPage(),
+      label: 'Alarms',
+      icon: CupertinoIcons.alarm,
+      activeIcon: CupertinoIcons.alarm_fill,
+      page: AlarmsPage(),
     ),
     AppSection(
       label: 'Calendar',
       icon: CupertinoIcons.calendar,
       activeIcon: CupertinoIcons.calendar_today,
       page: CalendarPage(),
-    ),
-    AppSection(
-      label: 'Tasks',
-      icon: CupertinoIcons.checkmark_seal,
-      activeIcon: CupertinoIcons.checkmark_seal_fill,
-      page: TodosPage(),
     ),
     AppSection(
       label: 'Calc',
@@ -75,20 +69,26 @@ class HomeShellPage extends ConsumerWidget {
           activeColor: activeColor,
           inactiveColor: inactiveColor,
           backgroundColor: isDark
-              ? VynixColors.darkSurface.withValues(alpha: 0.92)
-              : VynixColors.lightSurface.withValues(alpha: 0.92),
+              ? VynixColors.darkSurface.withValues(alpha: 0.85)
+              : VynixColors.lightSurface.withValues(alpha: 0.85),
           border: Border(
             top: BorderSide(
               color: isDark ? VynixColors.darkBorder : VynixColors.lightBorder,
               width: 0.5,
             ),
           ),
-          iconSize: 22,
+          iconSize: 24,
           items: _sections
               .map(
                 (section) => BottomNavigationBarItem(
-                  icon: Icon(section.icon),
-                  activeIcon: Icon(section.activeIcon),
+                  icon: Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Icon(section.icon),
+                  ),
+                  activeIcon: Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Icon(section.activeIcon),
+                  ),
                   label: section.label,
                 ),
               )
